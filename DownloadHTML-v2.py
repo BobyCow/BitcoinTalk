@@ -210,7 +210,7 @@ class BTC_Downloader:
         # Else, get names of the boards
         boardnames = [name for name in os.listdir(self._base_path) if os.path.isdir(os.path.join(self._base_path, name))]
         # Get nb of topics in local files
-        for boardname in os.listdir(self._base_path):
+        for boardname in boardnames:
             max_topics += len([dir for dir in os.listdir(os.path.join(self._base_path, boardname))])
         # Iterate over all boards
         for name in boardnames:
