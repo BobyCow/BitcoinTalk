@@ -127,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+
+##
+*.json
+BitcoinTalk-Forum
+test.py
