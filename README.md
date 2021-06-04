@@ -17,20 +17,20 @@ python -m pip install -r requirements.txt
 ## **Features:**
 
 ### _DownloadHTML-v2_
->Check if pages of the [BitcoinTalk][btcf] forum are missing and download them if necessary:
->`python DownloadHTML-v2.py`
+>Check if pages of the [BitcoinTalk][btcf] forum are missing and download them if necessary:  
+>RUN: `python DownloadHTML-v2.py`
 
 >Download all pages of the [BitcoinTalk][btcf] forum:
->`python DownloadHTML-v2.py [ -u | --update ]`
+>RUN: `python DownloadHTML-v2.py [ -u | --update ]`
 
 ### _Scraper_
->Iterate over downloaded files and retrieve all informations:
->`python Scraper.py`
+>Iterate over downloaded files and retrieve all informations:  
+>RUN: `python Scraper.py`
 
 ### _TextAnalysis_
->Iterate over all topics, create B-O-W (_bags-of-words_) and computes TF-IDF (_term frequency-inverse document frequency_) on each word (excluding stop-words & punctuation).  
->Before running this program, please make sure you already ran **DownloadHTML-v2.py** and **Scraper.py** in order to create a _BitcoinTalk-data.json_ file.
->`python TextAnalysis.py`
+>Iterate over all topics, create B-O-W (_bags-of-words_) and compute TF-IDF (_term frequency-inverse document frequency_) on each word (excluding stop-words & punctuation).  
+>Before running this program, please make sure you already ran **DownloadHTML-v2.py** and **Scraper.py** in order to create a _BitcoinTalk-data.json_ file:  
+>RUN: `python TextAnalysis.py`
 
 [bs4]: <https://www.crummy.com/software/BeautifulSoup/bs4/doc/>
 [cur]: <https://github.com/GijsTimmers/cursor>
