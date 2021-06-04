@@ -29,7 +29,8 @@ python -m pip install -r requirements.txt
 
 ### _TextAnalysis_
 >Iterate over all topics, create B-O-W (_bags-of-words_) and computes TF-IDF (_term frequency-inverse document frequency_) on each word (excluding stop-words & punctuation):
->`python Scraper.py`
+>Before running this program, please make sure you already ran **DownloadHTML-v2.py** and **Scraper.py** in order to create a _BitcoinTalk-data.json_ file.
+>`python TextAnalysis.py`
 
 [bs4]: <https://www.crummy.com/software/BeautifulSoup/bs4/doc/>
 [cur]: <https://github.com/GijsTimmers/cursor>
