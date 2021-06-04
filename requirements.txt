@@ -1,2 +1,3 @@
 cursor
 bs4
+spacy

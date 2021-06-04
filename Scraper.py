@@ -96,7 +96,7 @@ class BitcoinTalkScraper:
         lastpost = self._get_lastpost(tds[3])
         return title, description, link, moderator, posts, topics, lastpost
 
-    def _get_childboards(self, path='BitcoinTalk-Forum'):
+    def _get_childboards(self, path='tmp'):
         self._path = path
         with open(f'{path}/Mining.html', 'r') as file:
             html = file.read()
@@ -213,7 +213,7 @@ class BitcoinTalkScraper:
                 yield cur
 
     def _extract_posts(self, soup, board, infos, tp):
-        delay = 0.03
+        delay = 0.005
         scraped_posts = 0
         start = datetime.now()
         one_second = timedelta(seconds=1)
@@ -236,7 +236,7 @@ class BitcoinTalkScraper:
             self._data[board['title']][infos['title']][tp.replace('.html', '')]['posts'].append({
                 'author': author,
                 'html_content': str(content),
-                'raw_content': content.text,
+                'raw_content': content.get_text(separator=' '),
                 'last_edit': self._get_timestamp(date),
             })
             scraped_posts += 1

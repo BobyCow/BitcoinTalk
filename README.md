@@ -8,6 +8,7 @@
 |-----|-----|--------|
 | bs4 | [BeautifulSoup][bs4] | `from bs4 import BeautifulSoup as bs` |
 | cursor | [Cursor][cur] | `import cursor` |
+| spacy | [Spacy][spc] | `import spacy` |
 
 ```sh
 python -m pip install -r requirements.txt
@@ -28,4 +29,5 @@ python -m pip install -r requirements.txt
 
 [bs4]: <https://www.crummy.com/software/BeautifulSoup/bs4/doc/>
 [cur]: <https://github.com/GijsTimmers/cursor>
+[spc]: <https://spacy.io/>
 [btcf]: <https://bitcointalk.org/index.php?board=14.0>

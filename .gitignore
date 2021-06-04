@@ -128,8 +128,8 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-
-##
+# Misc
 *.json
 BitcoinTalk-Forum
 test.py
+*tmp*

@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup as bs
 from signal import signal, SIGINT
-from datetime import datetime
 from utils import make_request
+from datetime import datetime
 from time import sleep
 import hashlib
 import cursor
@@ -15,6 +15,9 @@ class BTC_Downloader:
         if not base_uri:
             raise Exception("Missing keyword argument 'base_uri'")
         self._base_path = base_path
+        # Check if 'BitcoinTalk-Forum' directory exists and create it if it doesn't
+        if not os.path.exists(self._base_path):
+            os.mkdir(self._base_path)
         self._base_uri = base_uri
         # In case the user stops the program (Ctrl+C) while it's running, we need to set a default value (None) for:
         #   - self._dl_start (if the program stops before the download starts)
@@ -94,14 +97,24 @@ class BTC_Downloader:
         # Return False if there is nothing to download, otherwise return True
         return False if len(self._download_list) == 0 else True
 
+    def _retrieve_html(self, uri, retry=1, max_retries=5):
+        # Make a request to get the first page of the board
+        response = make_request(uri)
+        ## To avoid encoding problems we first need to decode the content in latin1, then encoding and decoding it in utf-8
+        content = response.content.decode('latin1').encode('utf-8').decode('utf-8')
+        if response.status_code != 200 or content.count('cf-error') >= 1:
+            if retry != max_retries:
+                return self._retrieve_html(uri, retry=retry+1)
+            else:
+                print(f'Failed to download {uri} after {retry} attempts')
+                self._failures += 1
+        return content
+
     def start_downloading(self):
         # Setting a delay between requests, to avoid 429 (too many requests) and 503 (service unavailable) error codes
         delay = 0.5
         # Start download timer
         self._dl_start = datetime.now()
-        # Check if 'BitcoinTalk-Forum' directory exists and create it if it doesn't
-        if not os.path.exists(self._base_path):
-            os.mkdir(self._base_path)
         # Iterate over the download list
         for boardname, boardinfos in self._download_list.items():
             boardpages = boardinfos['pages']
@@ -110,10 +123,7 @@ class BTC_Downloader:
             if not os.path.exists(f'{boardpath}'):
                 os.mkdir(f'{boardpath}')
                 print(f'\nCreated `{boardname}` directory')
-            # Make a request to get the first page of the board
-            response = make_request(boardinfos['links'][0])
-            ## To avoid encoding problems we first need to decode the content in latin1, then encoding and decoding it in utf-8
-            content = response.content.decode('latin1').encode('utf-8').decode('utf-8')
+            content = self._retrieve_html(boardinfos['links'][0])
             # Save the result into a file stored into the board directory
             with open(f'{boardpath}/{boardname}.html', 'w', encoding='utf-8') as file:
                 file.write(content)
@@ -137,13 +147,7 @@ class BTC_Downloader:
                     page_id = str(int(float(topic_id))) + f'.{page_nb * 20}'
                     uri = f'{base_uri}{page_id}'
                     # Retrieve html of the topic page
-                    response = make_request(uri)
-                    # Check if the response is successful
-                    if response.status_code != 200:
-                        self._failures += 1
-                        print(f"Failed to download `{topic['title']}` ({page_nb + 1}/{topic_pages})...")
-                    # To avoid encoding problems we first need to decode the content in latin1, then encoding and decoding it in utf-8
-                    content = response.content.decode('latin1').encode('utf-8').decode('utf-8')
+                    content = self._retrieve_html(uri)
                     # Write the content into a file
                     with open(f'{topic_path}/{page_nb + 1}.html', 'w', encoding='utf-8') as file:
                         file.write(content)
@@ -179,6 +183,8 @@ class BTC_Downloader:
 
     @staticmethod
     def _progress_bar(topic_nb, max_topics, reset=False):
+        if max_topics == 0:
+            return
         toolbar_width = 50
         square = u'\u2588'
         percentage = round(100 * topic_nb / max_topics, 2)
