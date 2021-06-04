@@ -20,7 +20,7 @@ python -m pip install -r requirements.txt
 >Check if pages of the [BitcoinTalk][btcf] forum are missing and download them if necessary:  
 >RUN: `python DownloadHTML-v2.py`
 
->Download all pages of the [BitcoinTalk][btcf] forum:
+>Download all pages of the [BitcoinTalk][btcf] forum:  
 >RUN: `python DownloadHTML-v2.py [ -u | --update ]`
 
 ### _Scraper_
