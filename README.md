@@ -27,6 +27,10 @@ python -m pip install -r requirements.txt
 >Iterate over downloaded files and retrieve all informations:
 >`python Scraper.py`
 
+### _TextAnalysis_
+>Iterate over all topics, create B-O-W (_bags-of-words_) and computes TF-IDF (_term frequency-inverse document frequency_) on each word (excluding stop-words & punctuation):
+>`python Scraper.py`
+
 [bs4]: <https://www.crummy.com/software/BeautifulSoup/bs4/doc/>
 [cur]: <https://github.com/GijsTimmers/cursor>
 [spc]: <https://spacy.io/>
