@@ -1,1 +1,1 @@
-outage;ddos;strat;merged mining;location;server
+outage;ddos;strat;merge mining;location;server

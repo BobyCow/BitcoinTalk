@@ -236,7 +236,7 @@ class BitcoinTalkScraper:
             self._data[board['title']][infos['title']][tp.replace('.html', '')]['posts'].append({
                 'author': author,
                 'html_content': str(content),
-                'raw_content': content.get_text(separator=' '),
+                'raw_content': content.get_text(separator='\n'),
                 'last_edit': self._get_timestamp(date),
             })
             scraped_posts += 1
