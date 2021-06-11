@@ -62,6 +62,7 @@ It is a large file containing all informations about all scraped topics.**
 ****
 ### _TextAnalysis_
 >Iterate over all topics, create B-O-W (_bags-of-words_) and compute TF-IDF (_term frequency-inverse document frequency_) on each word (excluding stop-words & punctuation).  
+
 >Before running this program, please make sure you already ran **DownloadHTML-v2.py** and **Scraper.py** in order to create a `BitcoinTalk-data.json` file:  
 >RUN: `python TextAnalysis.py`
 
