@@ -96,7 +96,7 @@ class BitcoinTalkScraper:
         lastpost = self._get_lastpost(tds[3])
         return title, description, link, moderator, posts, topics, lastpost
 
-    def _get_childboards(self, path='tmp'):
+    def _get_childboards(self, path='BitcoinTalk-Forum'):
         self._path = path
         with open(f'{path}/Mining.html', 'r') as file:
             html = file.read()
