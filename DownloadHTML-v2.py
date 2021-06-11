@@ -18,6 +18,8 @@ class BTC_Downloader:
         # Check if 'BitcoinTalk-Forum' directory exists and create it if it doesn't
         if not os.path.exists(self._base_path):
             os.mkdir(self._base_path)
+        if not os.path.exists('./logs'):
+            os.mkdir('logs')
         self._base_uri = base_uri
         # In case the user stops the program (Ctrl+C) while it's running, we need to set a default value (None) for:
         #   - self._dl_start (if the program stops before the download starts)
@@ -42,7 +44,7 @@ class BTC_Downloader:
         print('------------------------ FETCHING ONLINE DATA ------------------------'.center(200))
         online_boards = self._get_online_board_list(base_page.content)
         # Saving results into a json file
-        with open('file_online.json', 'w', encoding='utf-8') as file:
+        with open('./logs/file_online.json', 'w', encoding='utf-8') as file:
             json.dump(online_boards, file, indent=2)
         print()
         # If the user asks for a full update, we don't need to check what's already downloaded
@@ -55,7 +57,7 @@ class BTC_Downloader:
         else:
             print('------------------------ FETCHING LOCAL DATA ------------------------'.center(200))
             local_boards = self._get_local_board_list()
-            with open('file_local.json', 'w', encoding='utf-8') as file:
+            with open('./logs/file_local.json', 'w', encoding='utf-8') as file:
                 json.dump(local_boards, file, indent=2)
             # Compare online_boards with local_boards to create a download_list
             return self._check_missing_pages(online_boards, local_boards)
@@ -90,7 +92,7 @@ class BTC_Downloader:
             else:
                 self._download_list[boardname] = boardinfos
         # Save the download list into a json file
-        with open('download_list.json', 'w', encoding='utf-8') as file:
+        with open('./logs/download_list.json', 'w', encoding='utf-8') as file:
             json.dump(self._download_list, file, indent=2)
         # Stop the checking timer
         self._check_end = datetime.now()
