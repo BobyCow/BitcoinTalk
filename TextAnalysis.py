@@ -40,8 +40,10 @@ class Analyzer:
     @staticmethod
     def exit(sig=None, frame=None):
         if sig or frame:
-            print('\n\nCtrl+C detected')
+            print('\n\nCtrl+C detected\n')
+        print('Setting cursor visible...')
         cursor.show()
+        print('Exiting with code 0')
         exit(0)
 
     @staticmethod
@@ -185,9 +187,6 @@ if __name__ == '__main__':
         print('\n')
         pools = get_pool_names()
         a.show_histogram_with_words(pools)
-        # for boardname in a.boards.keys():
-        #     for topic in a.boards[boardname].keys():
-        #         a.show_histogram(boardname, topic)
         a.exit()
     except Exception as e:
         print(f'\nIn: {e.__traceback__.tb_frame.f_code.co_filename}\nType: {type(e).__name__}', file=sys.stderr)

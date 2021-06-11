@@ -129,7 +129,9 @@ dmypy.json
 .pyre/
 
 # Misc
-*.json
+*logs*
+analysis_results.json
+BitcoinTalk-data.json
 BitcoinTalk-Forum
 test.py
 *tmp*
