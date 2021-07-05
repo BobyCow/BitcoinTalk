@@ -66,7 +66,7 @@ It is a large file containing all informations about all scraped topics.**
 >Before running this program, please make sure you already ran **DownloadHTML-v2.py** and **Scraper.py** in order to create a `BitcoinTalk-data.json` file:  
 >RUN: `python TextAnalysis.py`
 
-**It will analyse data inside `BitcoinTalk-data.json`, and will create a `analysis_results.json` file containing (as its name says) the results of the analysis:
+**It will analyse data inside `BitcoinTalk-data.json`, and will create a `analysis_results.json` file containing (as its name says) the results of the analysis:  
 For each word, of each post, of each topic:**
 - **number of occurrences**
 - **term frequency**
