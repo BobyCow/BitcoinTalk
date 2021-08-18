@@ -12,7 +12,7 @@ class BitcoinTalkScraper:
     def __init__(self):
         self._boards = []
         self._data = {}
-        self._save_file = 'BitcoinTalk-data.json'
+        self._save_file = 'raw_BitcoinTalk-data.json'
         cursor.hide()
 
     @staticmethod
@@ -65,7 +65,8 @@ class BitcoinTalkScraper:
             'timestamp': self._get_timestamp(date)
         }
 
-    def _get_author(self, text, anchor=None):
+    @staticmethod
+    def _get_author(text, anchor=None):
         if anchor:
             name, rank, status, activity, merit, *sentence = [info.strip() for info in text.split('\n') if len(info) > 0]
             return {
@@ -182,6 +183,8 @@ class BitcoinTalkScraper:
                 print(f"            └── {tp} ({int(tp[:tp.index('.')])}/{len(topic_pages)})")
                 with open(filename, 'r', encoding='utf-8') as file:
                     soup = bs(file.read(), 'html.parser')
+                link = soup.find('link', attrs={'rel': 'prev'}).get('href').replace(';prev_next=prev', '')
+                self._data[board['title']][infos['title']]['link'] = link
                 self._data[board['title']][infos['title']][tp.replace('.html', '')] = {'posts': []}
                 self._extract_posts(soup, board, infos, tp)
 
@@ -236,7 +239,7 @@ class BitcoinTalkScraper:
             self._data[board['title']][infos['title']][tp.replace('.html', '')]['posts'].append({
                 'author': author,
                 'html_content': str(content),
-                'raw_content': content.get_text(separator='\n'),
+                'raw_content': content.get_text(separator='\n').replace(u'\\u00a0', ' '),
                 'last_edit': self._get_timestamp(date),
             })
             scraped_posts += 1
@@ -244,7 +247,7 @@ class BitcoinTalkScraper:
             padding = ' ' * (25 - scraped_posts)
             info_str = f"{padding}{cur}  Scraped {scraped_posts} post{'s' if scraped_posts > 1 else ''} in {elapsed} second{'s' if elapsed > one_second else ''} ({delay} second{'s' if delay > 1 else ''} of delay)"
             print(info_str, end='', flush=True)
-            sleep(delay)
+            # sleep(delay)
             print('\b' * len(info_str), end='', flush=True)
         cur = u'\u25B8'
         info_str = f"{padding}{cur}  Scraped {scraped_posts} post{'s' if scraped_posts > 1 else ''} in {elapsed} second{'s' if elapsed > one_second else ''} ({delay} second{'s' if delay > 1 else ''} of delay)"

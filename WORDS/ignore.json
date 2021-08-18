@@ -1,10 +1,22 @@
 {
     "ignore": [
+        "the pool",
         "pool",
         "pools",
         "hi",
         "ve",
         "hey",
-        "-v"
+        "-v",
+        "quote",
+        "\b\b",
+        "pm",
+        "am",
+        "mining",
+        "miner",
+        "time",
+        "gh",
+        "good",
+        "use",
+        "month"
     ]
 }

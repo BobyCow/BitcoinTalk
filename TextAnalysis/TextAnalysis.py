@@ -1,14 +1,10 @@
 from signal import signal, SIGINT
-import matplotlib.pyplot as plt
 from datetime import datetime
 from spacy.matcher import Matcher
-import numpy as np
-import mplcursors
 import cursor
 import spacy
 import json
 import math
-import sys
 import os
 
 
@@ -17,13 +13,23 @@ class Analyzer:
         cursor.hide()
         self._data = None
         self._rules = [
+            # bi-grams
+            [{'LOWER': 'the'}, {'POS': 'NOUN'}],
+            [{'POS': 'NOUN'}, {'POS': 'NOUN'}],
             [{'POS': 'NOUN'}, {'POS': 'VERB'}],
             [{'POS': 'ADJ'}, {'POS': 'NOUN'}],
+            # tri-grams
             [{'POS': 'VERB'}, {'POS': 'ADJ'}, {'POS': 'NOUN'}],
             [{'POS': 'NOUN'}, {'POS': 'VERB'}, {'POS': 'ADV'}],
             [{'POS': 'NOUN'}, {'POS': 'ADP'}, {'POS': 'NOUN'}],
             [{'POS': 'NOUN'}, {'LOWER': '/'}, {'POS': 'NOUN'}],
-            [{'POS': 'PROPN'}, {'LOWER': '/'}, {'POS': 'PROPN'}]
+            [{'POS': 'PROPN'}, {'LOWER': '/'}, {'POS': 'PROPN'}],
+            # tri-grams with regex
+            [{'POS': 'NOUN'}, {'TEXT': {'REGEX': 'at|in|to|on|of'}}, {'POS': 'NOUN'}],
+            [{'TEXT': {'REGEX': 'at|in|to|on|of'}}, {'LOWER': 'the'}, {'POS': 'NOUN'}],
+            # quadri-grams with regex
+            [{'TEXT': {'REGEX': 'at|in|to|on|of'}}, {'LOWER': 'the'}, {'POS': 'ADJ'}, {'POS': 'NOUN'}],
+            [{'POS': 'NOUN'}, {'TEXT': {'REGEX': 'at|in|to|on|of'}}, {'LOWER': 'the'}, {'POS': 'NOUN'}]
         ]
         with open('WORDS/ignore.json', 'r') as file:
             self._ignore = json.load(file)['ignore']
@@ -55,7 +61,16 @@ class Analyzer:
         with open(filename, mode) as file:
             json.dump(data, file, indent=indent)
 
-    def load_data(self, json_path='BitcoinTalk-data.json'):
+    @staticmethod
+    def _is_num(token):
+        try:
+            int(token)
+            float(token)
+            return True
+        except:
+            return False
+
+    def load_data(self, json_path='raw_BitcoinTalk-data.json'):
         self._message(f'Loading data from {json_path}...')
         start = datetime.now()
         with open(json_path, 'r', encoding='utf-8', buffering=2000) as file:
@@ -67,13 +82,14 @@ class Analyzer:
            and not token.is_stop \
            and not token.pos_ == 'SPACE' \
            and not token.pos_ == 'X' \
+           and not self._is_num(token.lemma_) \
            and (len(token.text) > 1 and token.pos_ != 'SYM') \
            and (token.text not in self._ignore and token.lemma_ not in self._ignore):
-           # and token.lemma_ in self._nlp.vocab:
+           # and token.lemma_ in self._nlp.vocab: # If you only want words that are in the english NLP vocabulary
             return True
         return False
 
-    def scan(self):
+    def full_scan(self):
         if not self._data:
             raise Exception('self._data is None')
         self.boards = {key: {} for key in self._data.keys() if type(self._data[key]) == dict}
@@ -83,22 +99,28 @@ class Analyzer:
         self._matcher.add('rules', self._rules)
         for boardname in self.boards.keys():
             print(f'------------------ {boardname} ------------------'.center(200))
+            self.boards[boardname]['metadata'] = {'nb_of_words': 0, 'nb_of_documents': 0}
             self.topicnames[boardname] = [topicname for topicname in self._data[boardname].keys()]
-            for topicname in self.topicnames[boardname][:100]: # REMOVE [:100] if you want this function to scan all topics
+            for topicname in self.topicnames[boardname][:400]: # add [:100] if you want this function to full_scan only the first 100 topics
                 pages = self._data[boardname][topicname]['total_pages']
                 self._message(f"|{boardname}|{topicname.center(100)} ({pages} page{'' if pages == 1 else 's'})")
                 texts = [post['raw_content'].lower() for page in range(1, pages + 1) for post in self._data[boardname][topicname][str(page)]['posts']]
                 self.boards[boardname][topicname] = {'words': {}, 'metadata': {'nb_of_words': 0, 'nb_of_documents': len(texts)}}
+                self.boards[boardname]['metadata']['nb_of_documents'] += len(texts)
                 for doc, post_id in zip(self._nlp.pipe(texts), range(0, len(texts))):
                     self._process_analysis(boardname, topicname, doc, post_id)
                 self._compute_tfidf(boardname, topicname)
             print()
         self._save_json(self.boards, 'analysis_results.json')
+        self._save_json(self.boards, 'raw_analysis_results.json', indent=None)
 
     def _process_analysis(self, boardname, topicname, doc, post_id):
         lemmatized_doc = self._nlp(' '.join([token.lemma_ for token in doc]).replace(' / ', '/'))
         matches = self._matcher(lemmatized_doc)
         ngrams = [lemmatized_doc[start:end].text for _, start, end in matches]
+        nb_of_words = len(lemmatized_doc.text.split(' '))
+        self.boards[boardname]['metadata']['nb_of_words'] += nb_of_words
+        self.boards[boardname][topicname]['metadata']['nb_of_words'] = nb_of_words
         for ngram in ngrams:
             if ngram not in self.boards[boardname][topicname]['words']:
                 self.boards[boardname][topicname]['words'][ngram] = {'occurrences': 1, 'in_docs': [post_id]}
@@ -107,6 +129,7 @@ class Analyzer:
                 if post_id not in self.boards[boardname][topicname]['words'][ngram]['in_docs']:
                     self.boards[boardname][topicname]['words'][ngram]['in_docs'].append(post_id)
         for token in lemmatized_doc:
+            self.boards[boardname]['metadata']['nb_of_words'] += 1
             self.boards[boardname][topicname]['metadata']['nb_of_words'] += 1
             if self._is_token_valid(token):
                 if token.lemma_ not in self.boards[boardname][topicname]['words']:
@@ -126,69 +149,26 @@ class Analyzer:
             self.boards[boardname][topicname]['words'][word]['tf-idf'] = tf_idf
         self.boards[boardname][topicname]['words'] = dict(sorted(self.boards[boardname][topicname]['words'].items(), key=lambda x: x[1]['occurrences'], reverse=True))
 
-    def show_histogram(self, board, topic, main_val='occurrences'):
-        print(f'Histogram of: {board} / {topic}')
-        nb_to_show = 50
-        bar_width = 0.3
-        tfidf_scale = 300
-        words, frequencies, occurrences = [], [], []
-        if main_val == 'occurrences' or main_val != 'tf-idf':
-            values = self.boards[board][topic]['words'].keys()
-        elif main_val == 'tf-idf':
-            values = dict(sorted(self.boards[board][topic]['words'].items(), key=lambda x: x[1]['tf-idf'], reverse=True)).keys()
-        for w in values:
-            occurrences.append(self.boards[board][topic]['words'][w]['occurrences'])
-            frequencies.append(self.boards[board][topic]['words'][w]['tf-idf'] * tfidf_scale)
-            words.append(w)
-        x_ind = np.arange(len(self.boards[board][topic]['words']))
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        ax.set_title(f'{board} / {topic}')
-        ax.grid(zorder=0)
-        ax.set_xlabel('words')
-        ax.set_xticklabels(words[:nb_to_show], rotation='vertical')
-        ax.set_xticks(x_ind[:nb_to_show] + bar_width / 2)
-        b1 = ax.bar(x_ind[:nb_to_show], occurrences[:nb_to_show], bar_width, color='red', zorder=3, edgecolor='black')
-        b2 = ax.bar(x_ind[:nb_to_show] + bar_width, frequencies[:nb_to_show], bar_width, color='orange', zorder=3, edgecolor='black')
-        if main_val == 'occurrences' or main_val != 'tf-idf':
-            ax.legend((b1[0], b2[0]), ('occurrences', f'tf-idf (x{tfidf_scale})'))
-        elif main_val == 'tf-idf':
-            ax.legend((b2[0], b1[0]), (f'tf-idf (x{tfidf_scale})', 'occurrences'))
-        mplcursors.cursor(hover=True)
-        fig.tight_layout()
-        plt.show()
+    def temporal_scan(self, timestamp1, timestamp2, list_of_words=None, board_to_process='all'):
+        posts_to_scan = []
+        list_of_boards = [key for key in self._data.keys() if key != 'available_boards']
+        boardnames = [board_to_process] if board_to_process in list_of_boards else list_of_boards
+        for boardname in boardnames:
+            for topicname in self._data[boardname].keys():
+                pages = [self._data[boardname][topicname][str(page_nb)] for page_nb in range(1, self._data[boardname][topicname]['total_pages'] + 1)]
+                for page in pages:
+                    for post in page['posts']:
+                        if timestamp1 <= post['last_edit'] <= timestamp2:
+                            posts_to_scan.append({
+                                'board': boardname,
+                                'topic': topicname,
+                                'post': post
+                            })
 
-    def show_histogram_with_words(self, words):
-        n_best_words = 50
-        for boardname in self.boards.keys():
-            for topicname in self.boards[boardname].keys():
-                best_occ = list(self.boards[boardname][topicname]['words'].keys())[:n_best_words]
-                best_tfidf = [word[0] for word in sorted(self.boards[boardname][topicname]['words'].items(), key=lambda x: x[1]['tf-idf'], reverse=True)][:n_best_words]
-                for w in words:
-                    if (w in best_occ or w.replace(' ', '') in best_occ) \
-                       or w.replace(' ', '') in topicname.replace(' ', '').lower():
-                        self.show_histogram(boardname, topicname)
-                        break
-                    if w in best_tfidf or w.replace(' ', '') in best_tfidf:
-                        self.show_histogram(boardname, topicname, main_val='tf-idf')
-                        break
-
-
-def get_pool_names(filename='WORDS/pools.json'):
-    with open(filename, 'r') as file:
-        return [name.lower() for name in json.load(file)['names']]
 
 if __name__ == '__main__':
-    try:
-        a = Analyzer()
-        signal(SIGINT, a.exit)
-        a.load_data()
-        a.scan()
-        print('\n')
-        pools = get_pool_names()
-        a.show_histogram_with_words(pools)
-        a.exit()
-    except Exception as e:
-        print(f'\nIn: {e.__traceback__.tb_frame.f_code.co_filename}\nType: {type(e).__name__}', file=sys.stderr)
-        print(e, file=sys.stderr)
-        exit(-1)
+    a = Analyzer()
+    signal(SIGINT, a.exit)
+    a.load_data()
+    a.temporal_scan(1315539975.0, 1367165741.0)
+    a.exit()

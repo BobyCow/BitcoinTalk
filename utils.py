@@ -1,5 +1,6 @@
 import requests
 import socket
+import json
 
 def make_request(url, verbose=1, prefix=''):
    ## Making request ##
@@ -24,3 +25,7 @@ def pretty(d, indent=0):
          pretty(value, indent + 4)
       else:
          print(' ' * (indent + 4) + str(value))
+
+def get_pool_names(filename='WORDS/pools.json'):
+    with open(filename, 'r') as file:
+        return [name.lower() for name in json.load(file)['names']]

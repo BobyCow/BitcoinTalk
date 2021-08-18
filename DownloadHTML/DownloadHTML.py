@@ -29,7 +29,7 @@ class BTC_Downloader:
         self._failures = 0
         cursor.hide()
 
-    def are_pages_missing(self):
+    def are_pages_missing(self, flag):
         # Start timers
         self._start = datetime.now()
         self._check_start = datetime.now()
@@ -48,7 +48,7 @@ class BTC_Downloader:
             json.dump(online_boards, file, indent=2)
         print()
         # If the user asks for a full update, we don't need to check what's already downloaded
-        if len(sys.argv) >= 2 and ('--update' in sys.argv or '-u' in sys.argv):
+        if flag == '--update':
             print('------------------------ UPDATING ALL DATA ------------------------'.center(200))
             self._download_list = online_boards
             self._check_end = datetime.now()
@@ -345,13 +345,24 @@ class BTC_Downloader:
             yield name.strip(), max(pages), link
 
 
+def start_process(flag='standard'):
+    try:
+        base_uri = 'https://bitcointalk.org/index.php?board=14.0'
+        bts = BTC_Downloader(base_uri)
+        # Detect Ctrl+C
+        signal(SIGINT, bts.display_logs)
+        if bts.are_pages_missing(flag):
+            bts.start_downloading()
+    except Exception as e:
+        print(e, file=sys.stderr)
+
 if __name__ == '__main__':
     try:
         base_uri = 'https://bitcointalk.org/index.php?board=14.0'
         bts = BTC_Downloader(base_uri)
         # Detect Ctrl+C
         signal(SIGINT, bts.display_logs)
-        if bts.are_pages_missing():
+        if bts.are_pages_missing('standard'):
             bts.start_downloading()
     except Exception as e:
         print(e, file=sys.stderr)

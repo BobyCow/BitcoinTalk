@@ -128,10 +128,32 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# Misc
+# Text analysis logs
 *logs*
+
+# Results of the analysis in json format
+raw_full_analysis_results.json
+full_analysis_results.json
+raw_analysis_results.json
 analysis_results.json
+
+# Results of the scraping
+raw_BitcoinTalk-data.json
 BitcoinTalk-data.json
+Pools-data.json
+
+# Folder containing all html pages of the forum
 BitcoinTalk-Forum
+
+# Testing file
 test.py
+
+# Misc
 *tmp*
+.vscode
+analysis.csv
+analysis.json
+pool_topics_analysis.csv
+poolsdata.json
+pooltopics.json
+result.json
